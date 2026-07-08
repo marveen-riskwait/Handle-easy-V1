@@ -1,0 +1,20 @@
+{
+  "name": "Handle Easy",
+  "image": "mcr.microsoft.com/devcontainers/python:3.13",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "20" }
+  },
+  "forwardPorts": [3000, 3001],
+  "portsAttributes": {
+    "3000": { "label": "Handle Easy — Frontend (SPA)", "onAutoForward": "openPreview" },
+    "3001": { "label": "Handle Easy — Backend API", "onAutoForward": "silent" }
+  },
+  "remoteEnv": {
+    "FLASK_APP": "src/app.py",
+    "ODOO_MOCK": "1",
+    "DATABASE_URL": "",
+    "PYTHONUNBUFFERED": "1"
+  },
+  "postCreateCommand": "pip install --user -r requirements.txt && npm install",
+  "postStartCommand": "bash .devcontainer/start.sh"
+}

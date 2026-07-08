@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: handleeasy
+      POSTGRES_PASSWORD: handleeasy
+      POSTGRES_DB: handleeasy
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U handleeasy"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+    command: >
+      sh -c "flask db upgrade &&
+             flask seed &&
+             gunicorn --bind 0.0.0.0:3001 wsgi --chdir ./src/"
+    environment:
+      DATABASE_URL: postgresql://handleeasy:handleeasy@db:5432/handleeasy
+      FLASK_APP_KEY: super-secret-change-me
+      FLASK_APP: src/app.py
+      FRONTEND_URL: http://localhost:3000
+      ODOO_MOCK: "1"
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    image: node:20-slim
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host"
+    environment:
+      VITE_BACKEND_URL: http://localhost:3001
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

@@ -1,0 +1,72 @@
+:root {
+  --he-primary: #e8622c;
+  --he-dark: #1f2933;
+}
+
+body {
+  background: #f6f7f9;
+  color: var(--he-dark);
+}
+
+.he-navbar {
+  background: var(--he-dark);
+}
+.he-brand {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.he-brand span {
+  color: var(--he-primary);
+}
+
+.btn-he {
+  background: var(--he-primary);
+  border-color: var(--he-primary);
+  color: #fff;
+}
+.btn-he:hover {
+  background: #d1531f;
+  border-color: #d1531f;
+  color: #fff;
+}
+
+.table-tile {
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.table-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.guest-shell {
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+.item-row {
+  cursor: pointer;
+}
+.item-row.claimed {
+  border-left: 4px solid var(--he-primary);
+}
+.item-row.paid {
+  opacity: 0.55;
+}
+
+.avatar-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--he-primary);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-left: 2px;
+}

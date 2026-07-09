@@ -13,7 +13,7 @@ def setup_commands(app):
     @app.cli.command("seed")
     def seed():
         """Create a demo company, admin, tables, products and one open session."""
-        if Company.query.filter_by(email="admin@demo.com").first():
+        if User.query.filter_by(email="admin@demo.com").first():
             click.echo("Seed already present — skipping.")
             return
 

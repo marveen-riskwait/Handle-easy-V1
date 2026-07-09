@@ -255,7 +255,8 @@ class Payment(db.Model):
     session_id: Mapped[int] = mapped_column(ForeignKey("table_session.id"), nullable=False)
     customer_id: Mapped[int] = mapped_column(ForeignKey("customer.id"), nullable=False)
 
-    amount: Mapped[float] = mapped_column(Float, default=0.0)
+    amount: Mapped[float] = mapped_column(Float, default=0.0)   # bill share (drives settle)
+    tip: Mapped[float] = mapped_column(Float, default=0.0, server_default="0")  # extra, on top
     status: Mapped[str] = mapped_column(String(20), default="pending")  # pending | paid
     stripe_payment_id: Mapped[str] = mapped_column(String(120), nullable=True)
 
@@ -264,12 +265,17 @@ class Payment(db.Model):
     session = relationship("TableSession", back_populates="payments")
     customer = relationship("Customer")
 
+    def total_charged(self):
+        return round((self.amount or 0) + (self.tip or 0), 2)
+
     def serialize(self):
         return {
             "id": self.id,
             "session_id": self.session_id,
             "customer_id": self.customer_id,
             "amount": self.amount,
+            "tip": self.tip,
+            "total_charged": self.total_charged(),
             "status": self.status,
             "stripe_payment_id": self.stripe_payment_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,

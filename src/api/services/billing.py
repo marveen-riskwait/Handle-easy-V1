@@ -42,6 +42,7 @@ def compute_split(session):
 
         items_out.append({
             "id": item.id,
+            "product_id": item.product_id,
             "name": item.name or (item.product.name if item.product else "Article"),
             "quantity": item.quantity,
             "unit_price": item.unit_price,
@@ -51,13 +52,15 @@ def compute_split(session):
             "share": share,
         })
 
-    # How much each customer has already paid.
+    # How much each customer has already paid (bill share only; tips are extra).
     paid_by_customer = {c.id: 0.0 for c in session.customers}
     paid_total = 0.0
+    tips_total = 0.0
     for p in session.payments:
         if p.status == "paid":
             paid_by_customer[p.customer_id] = paid_by_customer.get(p.customer_id, 0.0) + p.amount
             paid_total += p.amount
+            tips_total += (p.tip or 0)
 
     customers_out = []
     for c in session.customers:
@@ -79,6 +82,7 @@ def compute_split(session):
         "unassigned_total": round(unassigned_total, 2),
         "grand_total": round(grand_total, 2),
         "paid_total": round(paid_total, 2),
+        "tips_total": round(tips_total, 2),
         "fully_paid": fully_paid,
     }
 

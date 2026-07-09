@@ -13,6 +13,9 @@ export function GuestTable() {
   const [error, setError] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [tipPct, setTipPct] = useState(0);        // 0 | 5 | 10 | 15
+  const [receipt, setReceipt] = useState(null);   // last payment {amount, tip, total_charged}
+  const [reviews, setReviews] = useState({});     // { itemId: {rating, comment, done} }
 
   const load = useCallback(async () => {
     try {
@@ -76,12 +79,28 @@ export function GuestTable() {
     } catch (e) { setError(errMsg(e)); } finally { setBusy(false); }
   };
 
-  const pay = async () => {
+  const pay = async (tip) => {
     setBusy(true); setError("");
     try {
       const { data: res } = await api.post(`/sessions/${data.session.id}/pay`,
-        { customer_id: meId });
+        { customer_id: meId, tip: tip || 0 });
+      setReceipt(res.payment);
       setData((d) => ({ ...d, split: res.split, session: res.session }));
+    } catch (e) { setError(errMsg(e)); } finally { setBusy(false); }
+  };
+
+  const submitReview = async (item) => {
+    const r = reviews[item.id] || {};
+    if (!r.rating) return;
+    setBusy(true);
+    try {
+      await api.post("/reviews", {
+        customer_id: meId,
+        product_id: item.product_id,
+        rating: r.rating,
+        comment: r.comment || "",
+      });
+      setReviews((prev) => ({ ...prev, [item.id]: { ...r, done: true } }));
     } catch (e) { setError(errMsg(e)); } finally { setBusy(false); }
   };
 
@@ -235,21 +254,119 @@ export function GuestTable() {
       </div>
 
       {/* My payment */}
+      <PaymentCard me={me} tipPct={tipPct} setTipPct={setTipPct} pay={pay}
+                   busy={busy} receipt={receipt} />
+
+      {/* Rate the dishes I had — shown once I've paid my share */}
+      {me && me.paid > 0 && (
+        <ReviewsCard
+          items={split.items.filter((it) => it.assignee_ids.includes(meId) && it.product_id)}
+          reviews={reviews} setReviews={setReviews}
+          submitReview={submitReview} busy={busy} />
+      )}
+    </Shell>
+  );
+}
+
+function PaymentCard({ me, tipPct, setTipPct, pay, busy, receipt }) {
+  const due = me?.due ?? 0;
+  const tip = Math.round(due * (tipPct / 100) * 100) / 100;
+  const total = Math.round((due + tip) * 100) / 100;
+
+  if (me && due <= 0) {
+    return (
       <div className="card">
         <div className="card-body text-center">
-          <div className="text-muted">Votre part</div>
-          <div className="display-6 fw-bold mb-2">{(me?.due ?? 0).toFixed(2)} €</div>
-          {me && me.due <= 0 ? (
-            <div className="text-success">Vous êtes à jour ✓</div>
-          ) : (
-            <button className="btn btn-he btn-lg w-100" disabled={busy || !me || me.due <= 0}
-                    onClick={pay}>
-              Payer {(me?.due ?? 0).toFixed(2)} €
-            </button>
+          <div className="display-6">✓</div>
+          <div className="text-success fw-semibold">Vous êtes à jour</div>
+          {receipt && (
+            <div className="small text-muted mt-2">
+              Payé {receipt.total_charged.toFixed(2)} €
+              {receipt.tip > 0 && ` (dont ${receipt.tip.toFixed(2)} € de pourboire)`}
+              <br />Reçu #{receipt.stripe_payment_id}
+            </div>
           )}
         </div>
       </div>
-    </Shell>
+    );
+  }
+
+  return (
+    <div className="card">
+      <div className="card-body text-center">
+        <div className="text-muted">Votre part</div>
+        <div className="display-6 fw-bold mb-1">{due.toFixed(2)} €</div>
+
+        <div className="text-muted small mb-1">Ajouter un pourboire ?</div>
+        <div className="btn-group mb-3" role="group">
+          {[0, 5, 10, 15].map((p) => (
+            <button key={p} type="button"
+                    className={`btn btn-sm ${tipPct === p ? "btn-he" : "btn-outline-secondary"}`}
+                    onClick={() => setTipPct(p)}>
+              {p === 0 ? "Aucun" : `${p}%`}
+            </button>
+          ))}
+        </div>
+
+        {tip > 0 && (
+          <div className="small text-muted mb-2">
+            Part {due.toFixed(2)} € + pourboire {tip.toFixed(2)} €
+          </div>
+        )}
+
+        <button className="btn btn-he btn-lg w-100" disabled={busy || !me || due <= 0}
+                onClick={() => pay(tip)}>
+          Payer {total.toFixed(2)} €
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function StarRating({ value, onChange }) {
+  return (
+    <div style={{ fontSize: "1.4rem", lineHeight: 1, cursor: "pointer" }}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <span key={n} onClick={() => onChange(n)}
+              style={{ color: n <= value ? "var(--he-primary)" : "#ccc" }}>★</span>
+      ))}
+    </div>
+  );
+}
+
+function ReviewsCard({ items, reviews, setReviews, submitReview, busy }) {
+  if (!items.length) return null;
+  const set = (id, patch) =>
+    setReviews((prev) => ({ ...prev, [id]: { ...(prev[id] || {}), ...patch } }));
+
+  return (
+    <div className="card mt-3">
+      <div className="card-body">
+        <h6 className="text-muted mb-2">Notez vos plats</h6>
+        {items.map((it) => {
+          const r = reviews[it.id] || {};
+          return (
+            <div key={it.id} className="mb-3 pb-2 border-bottom">
+              <div className="fw-semibold">{it.name}</div>
+              {r.done ? (
+                <div className="text-success small">Merci pour votre note ✓</div>
+              ) : (
+                <>
+                  <StarRating value={r.rating || 0} onChange={(n) => set(it.id, { rating: n })} />
+                  <input className="form-control form-control-sm my-2"
+                         placeholder="Commentaire (optionnel)"
+                         value={r.comment || ""} onChange={(e) => set(it.id, { comment: e.target.value })} />
+                  <button className="btn btn-sm btn-outline-secondary"
+                          disabled={busy || !r.rating} onClick={() => submitReview(it)}>
+                    Envoyer
+                  </button>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

@@ -64,10 +64,19 @@ def pay(session_id):
     if due <= 0:
         raise APIException("Rien à payer pour ce client", status_code=409)
 
-    receipt = charge(due, customer.display_name())
+    # Optional tip, charged on top of the bill share.
+    try:
+        tip = round(float(body.get("tip") or 0), 2)
+    except (TypeError, ValueError):
+        tip = 0.0
+    if tip < 0:
+        tip = 0.0
+
+    receipt = charge(due + tip, customer.display_name())
     payment = Payment(
         customer_id=customer.id,
         amount=due,
+        tip=tip,
         status="paid",
         stripe_payment_id=receipt["id"],
     )

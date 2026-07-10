@@ -1,7 +1,7 @@
 {
-  "name": "handle-easy",
-  "version": "1.0.0",
-  "description": "Handle Easy — split the restaurant bill among guests (an Odoo POS overlay).",
+  "name": "rdv-cycles",
+  "version": "0.1.0",
+  "description": "RDV Cycles — location de vélo au lac du Salagou : réservation en ligne, paiement, back-office.",
   "private": true,
   "type": "module",
   "engines": {

@@ -1,0 +1,29 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+flask = "==3.1.3"
+flask-sqlalchemy = "==3.1.1"
+flask-migrate = "==4.1.0"
+flask-jwt-extended = "==4.7.4"
+flask-cors = "==6.0.2"
+flask-admin = "==2.0.0"
+marshmallow = "==3.23.1"
+psycopg2-binary = "==2.9.12"
+python-dotenv = "==1.2.2"
+gunicorn = "==23.0.0"
+requests = "==2.32.3"
+werkzeug = "==3.1.8"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"
+
+[scripts]
+start = "python src/app.py"
+seed = "flask seed"
+migrate = "flask db migrate"
+upgrade = "flask db upgrade"

@@ -12,7 +12,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 
 from api.utils import APIException, generate_sitemap
-from api.models import db
+from api.models import db, TokenBlocklist
 from api.routes import api
 from api.admin import setup_admin
 from api.commands import setup_commands
@@ -29,12 +29,22 @@ app.url_map.strict_slashes = False
 # ── JWT (httpOnly cookie + CSRF) ────────────────────────
 app.config["JWT_SECRET_KEY"] = os.getenv("FLASK_APP_KEY", "super-secret-change-me")
 app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=7)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=15)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_COOKIE_SECURE"] = ENV != "development"  # HTTPS-only in prod
 app.config["JWT_COOKIE_SAMESITE"] = "Lax"
 app.config["JWT_COOKIE_CSRF_PROTECT"] = True
 app.config["JWT_ACCESS_COOKIE_PATH"] = "/"
+# Refresh cookie is only sent to the refresh endpoint, limiting its exposure.
+app.config["JWT_REFRESH_COOKIE_PATH"] = "/api/auth/refresh"
 jwt = JWTManager(app)
+
+
+@jwt.token_in_blocklist_loader
+def _token_revoked(_jwt_header, jwt_payload) -> bool:
+    """Reject access/refresh tokens whose jti has been revoked (logout/rotation)."""
+    jti = jwt_payload["jti"]
+    return TokenBlocklist.query.filter_by(jti=jti).first() is not None
 
 # ── CORS ────────────────────────────────────────────────
 # Cookies require an explicit origin list (no "*") + credentials.
@@ -48,7 +58,7 @@ db_url = os.getenv("DATABASE_URL")
 if db_url:
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url.replace("postgres://", "postgresql://")
 else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/handle_easy.db"
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/rdv_cycles.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 MIGRATE = Migrate(app, db, compare_type=True)

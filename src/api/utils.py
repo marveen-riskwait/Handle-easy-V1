@@ -26,7 +26,7 @@ def generate_sitemap(app):
     links_html = "".join(f"<li><code>{l}</code></li>" for l in sorted(set(links)))
     return (
         "<div style='font-family:sans-serif;padding:2rem'>"
-        "<h1>Handle Easy API</h1>"
+        "<h1>RDV Cycles API</h1>"
         "<p>Backend is running. Available GET endpoints:</p>"
         f"<ul>{links_html}</ul></div>"
     )

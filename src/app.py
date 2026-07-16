@@ -19,6 +19,16 @@ from api.commands import setup_commands
 
 ENV = "development" if os.getenv("FLASK_DEBUG") == "1" else "production"
 
+# Fail closed: a default/short secret in production means JWTs (incl. admin
+# sessions) are forgeable. Refuse to boot rather than run insecurely.
+DEFAULT_APP_KEY = "super-secret-change-me"
+APP_KEY = os.getenv("FLASK_APP_KEY", DEFAULT_APP_KEY)
+if ENV != "development" and (APP_KEY == DEFAULT_APP_KEY or len(APP_KEY) < 32):
+    raise RuntimeError(
+        "FLASK_APP_KEY must be set to a strong secret (>= 32 chars) in "
+        "production. Refusing to start with the default/short key."
+    )
+
 static_file_dir = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "../dist/"
 )
@@ -27,7 +37,7 @@ app = Flask(__name__)
 app.url_map.strict_slashes = False
 
 # ── JWT (httpOnly cookie + CSRF) ────────────────────────
-app.config["JWT_SECRET_KEY"] = os.getenv("FLASK_APP_KEY", "super-secret-change-me")
+app.config["JWT_SECRET_KEY"] = APP_KEY
 app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=15)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
@@ -64,7 +74,11 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 MIGRATE = Migrate(app, db, compare_type=True)
 db.init_app(app)
 
-setup_admin(app)
+# Flask-Admin exposes raw CRUD over every table with NO authentication, so it
+# must never be reachable in production. Mount it only in development, unless
+# ENABLE_ADMIN=1 is set explicitly (e.g. behind a network/auth proxy).
+if ENV == "development" or os.getenv("ENABLE_ADMIN") == "1":
+    setup_admin(app)
 setup_commands(app)
 app.register_blueprint(api, url_prefix="/api")
 

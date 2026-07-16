@@ -9,6 +9,7 @@ the following lots.
 from flask import Blueprint, jsonify
 
 from .auth import auth_bp
+from .catalog import catalog_bp
 
 api = Blueprint("api", __name__)
 
@@ -19,3 +20,4 @@ def health():
 
 
 api.register_blueprint(auth_bp, url_prefix="/auth")
+api.register_blueprint(catalog_bp)

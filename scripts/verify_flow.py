@@ -36,6 +36,16 @@ def csrf_from(resp):
 # 1. Health
 show("health", s.get(f"{BASE}/health"))
 
+# 1b. Public catalogue (Lot 1) — needs `flask seed` to be non-empty.
+bikes = show("catalogue vélos", s.get(f"{BASE}/bikes"))
+if bikes.ok and bikes.json()["bikes"]:
+    first = bikes.json()["bikes"][0]
+    print(f"    {len(bikes.json()['bikes'])} modèles, "
+          f"1er = {first['name']} dès {first['from_price_cents']} c")
+show("stations", s.get(f"{BASE}/stations"))
+show("options", s.get(f"{BASE}/options"))
+show("tarifs", s.get(f"{BASE}/rates"))
+
 # 2. Register a throwaway customer (unique email each run) and get a session.
 email = f"smoke+{uuid.uuid4().hex[:8]}@demo.com"
 reg = show("register", s.post(f"{BASE}/auth/register", json={

@@ -1,18 +1,20 @@
-import { createBrowserRouter, createRoutesFromElements, Route, Navigate } from "react-router-dom";
+import { createBrowserRouter, createRoutesFromElements, Route } from "react-router-dom";
 
+import { PublicLayout } from "./components/PublicLayout";
+import { Catalog } from "./pages/Catalog";
 import { StaffLayout } from "./layouts/StaffLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { Dashboard } from "./pages/Dashboard";
-import { TableDetail } from "./pages/TableDetail";
-import { GuestTable } from "./pages/GuestTable";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <Route errorElement={<div className="p-5 text-center">Page introuvable.</div>}>
-      {/* Public guest flow — reached by scanning a table QR code */}
-      <Route path="/table/:token" element={<GuestTable />} />
+      {/* Public visitor site */}
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<Catalog />} />
+      </Route>
 
       {/* Staff auth */}
       <Route path="/login" element={<Login />} />
@@ -21,10 +23,7 @@ export const router = createBrowserRouter(
       {/* Staff app (protected, shares a chrome/navbar) */}
       <Route element={<ProtectedRoute><StaffLayout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/tables/:tableId" element={<TableDetail />} />
       </Route>
-
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
     </Route>
   )
 );

@@ -1,6 +1,10 @@
 :root {
   --he-primary: #e8622c;
   --he-dark: #1f2933;
+  /* RDV Cycles — public site palette */
+  --rdv-green: #2f9e63;
+  --rdv-green-dark: #24784b;
+  --rdv-ink: #16231b;
 }
 
 body {
@@ -70,3 +74,67 @@ body {
   font-weight: 600;
   margin-left: 2px;
 }
+
+/* ── RDV Cycles public site ───────────────────────────── */
+.rdv-site { background: #fff; min-height: 100vh; display: flex; flex-direction: column; }
+.rdv-site main { flex: 1; }
+
+.rdv-header { background: var(--rdv-ink); }
+.rdv-brand {
+  font-weight: 800; letter-spacing: -0.02em; font-size: 1.4rem;
+  color: #fff; text-decoration: none;
+}
+.rdv-brand span { color: var(--rdv-green); }
+.rdv-brand--sm { font-size: 1.1rem; }
+.rdv-nav-link { color: rgba(255, 255, 255, 0.85); text-decoration: none; font-weight: 600; }
+.rdv-nav-link:hover { color: #fff; }
+
+.rdv-hero {
+  background: linear-gradient(120deg, var(--rdv-green-dark), var(--rdv-green));
+  color: #fff; padding: 3.5rem 0;
+}
+.rdv-hero h1 { font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.6rem; }
+.rdv-hero .lead { max-width: 640px; opacity: 0.95; }
+
+.rdv-section-title { font-weight: 800; letter-spacing: -0.01em; margin-bottom: 1.2rem; }
+
+.rdv-card {
+  display: flex; flex-direction: column; background: #fff;
+  border: 1px solid #e7e9ee; border-radius: 14px; overflow: hidden;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.rdv-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08); }
+.rdv-card__media { position: relative; aspect-ratio: 16 / 10; background: #f2f5f3; }
+.rdv-card__media img { width: 100%; height: 100%; object-fit: cover; }
+.rdv-card__placeholder {
+  width: 100%; height: 100%; display: flex; align-items: center;
+  justify-content: center; font-size: 3rem;
+}
+.rdv-badge {
+  position: absolute; top: 0.6rem; left: 0.6rem; background: var(--rdv-green);
+  color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+}
+.rdv-card__body { padding: 1rem 1.1rem 1.15rem; display: flex; flex-direction: column; flex: 1; }
+.rdv-card__body h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.35rem; }
+.rdv-card__desc { color: #5b6470; font-size: 0.9rem; margin-bottom: 0.9rem; }
+.rdv-card__foot {
+  margin-top: auto; display: flex; align-items: center;
+  justify-content: space-between; gap: 0.5rem;
+}
+.rdv-price { font-size: 0.95rem; color: #5b6470; }
+.rdv-price strong { color: var(--rdv-ink); font-size: 1.05rem; }
+
+.btn-rdv { background: var(--rdv-green); border-color: var(--rdv-green); color: #fff; }
+.btn-rdv:hover { background: var(--rdv-green-dark); border-color: var(--rdv-green-dark); color: #fff; }
+
+.rdv-stations { background: #f6f8fa; }
+.rdv-station { background: #fff; border: 1px solid #e7e9ee; border-radius: 12px; padding: 1rem 1.1rem; }
+.rdv-station h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.3rem; }
+.rdv-tag {
+  margin-left: 0.5rem; background: #eef4f0; color: var(--rdv-green-dark);
+  font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 999px;
+  vertical-align: middle;
+}
+
+.rdv-footer { background: var(--rdv-ink); color: #fff; margin-top: 2rem; }
